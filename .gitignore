@@ -1,0 +1,10 @@
+
+#Builds
+*/[Dd]ebug/
+*/[Dd]ebugPublic/
+*/[Rr]elease/
+*/[Rr]eleases/
+
+
+#Node modules
+*/node_modules/
