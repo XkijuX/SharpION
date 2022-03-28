@@ -1,22 +1,24 @@
 # SharpION
 
 ![SharpionLogo](http://65.108.213.178:3000/api/image?imageID=Njf1nF2r9VnrQWuRb8c3)
-SharpION er et Onion Nettverk implementert i C#. SharpION fungerer som en tunnel mellom en Client og Serveren. Dette gjøres ved at brukeren kobbler seg på SharpION nettverket. Client en en inngang til SharpION nettverket og fungerer som en proxy. Denne proxyen kan brukes med nettlesere som blant annet [Google Chrome](https://www.google.com/chrome/) ved bruk av extensions. 
+SharpION er et Onion Nettverk implementert i C#. SharpION fungerer som en tunnel mellom en Client og Serveren. Dette gjøres ved at brukeren kobler seg på SharpION nettverket. Client  en inngang til SharpION nettverket og fungerer som en proxy. Denne proxyen kan brukes med nettlesere som blant annet [Google Chrome](https://www.google.com/chrome/) ved bruk av utvidelser. 
 
 Når proxy serveren får et request vil en ny rute igjennom SharpION nettverket opprettes. Det velges tre noder fra nettverket. Deretter skapes sikre veier mellom disse nodene ved hjelp av kryptering. 
 
-## Innhold:
-
+## **Innhold**
+---
 1. [Funksjonalitet](#funksjonalitet)
 1. [Fremtidig arbeid / mangler](#fremtidig-arbeid--mangler--svakheter)
 1. [Eksterne avhengigheter](#eksterne-avhengigheter)
 1. [Intallasjonsinstrukser](#intallasjonsinstrukser)
-1. [Bruker Guide](#bruker-guide)
+1. [Bruker Manual](#bruker-manual)
 1. [Running Tests](#kjøring-av-tester)
 1. [Ekstern infomasjon](#ekstern-informasjon)
 
 
-## Funksjonalitet
+<br/><br/>
+## **Funksjonalitet**
+---
 - Sending av HTTP request
     - Støtter http metoder som GET, PUT, POST, DELETE
 - Støtte for visuell fremvisning
@@ -24,22 +26,31 @@ Når proxy serveren får et request vil en ny rute igjennom SharpION nettverket 
 - Kryptografi
     - Bruker RSA og AES-CFB for å skjule meldingene i nettverket.
 - DNS lookup
-    - Henter ip addresser fra DNS servere fra HTTP header.
+    - Henter ip adresser fra DNS servere fra HTTP header. Dette gjøres ved endenoden og sikkrer anonymitet hos bruker.
 
-## Fremtidig arbeid / mangler / svakheter
+<br/><br/>
+
+## **Fremtidig arbeid / mangler / svakheter**
+---
 SharpION er et program som ikke er ferdig utviklet. Programmet har fortsatt mangler og svakheter. Disse er som følger:
-- 100% Test dekning (svakhet)
+- 100% Test dekning (``mangler / fremtidig arbeid``)
     - Viktig for å sikre at programmet og funksjoner fungerer.
-- Garlic Routing (svakhet)
-    - Selv om onion routing fungerer bra for å skjule data er det ikke perfekt. Ved hjelp av timing analyser er det mulig å finne avsender og destinasjon. En måte å løse dette på er å bruke Garlic Routing. Derfor kan det være aktuelt for videre arbeid.
-- HTTPS (mangel)
-    - SharpION støtter bare HTTP nå som ikke er sikkert på endenoden. Dersom en ondsindet person kjører en node som blir endenoden kan denne personen fange traffiken som går igjennom nettverket.
-- Andre Nettverkspakker (mangel)
+- Garlic Routing (``svakhet``)
+    - Selv om onion routing fungerer bra for å skjule data er det ikke perfekt. Ved hjelp av timing analyser er det mulig å finne avsender og destinasjon. En måte å løse dette på er å bruke Garlic Routing.
+- HTTPS (``mangel / fremtidig arbeid``)
+    - SharpION støtter bare HTTP nå som ikke er sikkert på endenoden. Dersom en ondsinnet person kjører en node som blir endenoden kan denne personen fange trafikken som går igjennom nettverket.
+- Andre Nettverkspakker (``mangel / fremtidig arbeid``)
     - SharpION kan fungere som et VPN nettverk som støtter alle pakker som sendes fra maskiner.
-- Støtte for ipaddresser (mangel)
+- Støtte for ipaddresser (``mangel / fremtidig arbeid``)
     - SharpION støtter ikke urler i form av ip adresser.
+- Proxy utvidelse (``svakhet``)
+    - Ved å bruke en proxy utvidelse i chrome gir man utvidelsen tilgang til all data. Dette kan være en svakhet hvis utvikleren har onde hensikter. Problemet kan fikses ved å bruke windows proxy, men dette støttes ikke av program slik den er i dag. Derfor er den anbefalte proxy tjenesten valgt til dette programmet open source som gir mer trygghet.
+- Utsjekking av Noder (``svakhet / mangel / fremtidig arbeid``)
+    - Dersom en node avsluttes må programmet startes på nytt. Dette er derfor en svakhet og mangel som er viktig å få gjort.
+<br/><br/>
 
-## Eksterne avhengigheter
+## **Eksterne avhengigheter**
+---
 Sharpion sine avhengigheter er som følger:
 - Client
     - [Newtonsoft.Json](https://www.newtonsoft.com/json) 
@@ -53,11 +64,12 @@ Sharpion sine avhengigheter er som følger:
         - Test rammeverk for Node.js
         - Brukes for å teste directory server.
     - [SuperTest](https://github.com/visionmedia/supertest#readme)
-        - Modul for å testing av HTTP (brukes for å kjøre test forespørlser til express serveren)
+        - Modul for testing av HTTP (brukes for å kjøre test forespørlser til express serveren)
 - Node (Bruker ingen eksterne avhengigheter)
 
-## Intallasjonsinstrukser
-
+<br/><br/>
+## **Installasjonsinstrukser**
+---
 For å kjøre programmene kreves både dotnet og node.js.
 - Installasjons linker:
     - [dotnet](https://dotnet.microsoft.com/en-us/download/dotnet/5.0)
@@ -69,22 +81,27 @@ For å installere dependencies for Client:
     dotnet restore
 ```
 
-For å starte dependecies på Directory Server:
+For å installere dependencies på Directory Server:
 - ``npm install`` trenger kun å kjøre ved første oppstart av programmet
 ```bash
     cd DirectoryServer
     npm install
 ```
 
-## Bruker Guide
+<br/><br/>
+
+## **Bruker Manual**
+---
 Programmet startes i denne rekkefølgen:
 1. Directory Server
      ```bash
         cd DirectoryServer
-        dotnet run
+        node index.js
     ```
 2. Node
     - Anbefalt for å starte 3 instasner av dette programmet.
+    - Dersom du får " Could not copy" error ved oppstart bruk:
+        - ``dotnet run --no-build``
      ```bash
         cd Node
         dotnet run
@@ -97,25 +114,31 @@ Programmet startes i denne rekkefølgen:
     ```
 
 4. Bruk av [SwitchyOmega](https://github.com/FelisCatus/SwitchyOmega) proxy for google chrome (**Valgfritt**  andre proxy servere kan brukes)
-    - SwitchyOmega Proxy brukes for å koble Chrome nettleseren til den lokale proxy serveren. SwitchyOmega proxy er også annbefalt fordi den har funksjoner som gjør at brukeren kan spesifisere hvilken trafikk som blir omdirigert som blant annet HTTP forespørsler.
+    - SwitchyOmega Proxy brukes for å koble Chrome nettleseren til den lokale proxy serveren. SwitchyOmega proxy er også anbefalt fordi den har funksjoner som gjør at brukeren kan spesifisere hvilken trafikk som blir omdirigert som blant annet HTTP forespørsler.
 
     - Installasjon av SwitchyOmega (Google Chrome).
         - [Last ned](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif?hl=en) programmet fra Chrome Web Store.
         1. Velg "New Profile..." under menyen Profiles 
         2. Trykk på "Show Advanced" og sett "http://" protokollen til HTTP og skriv inn "127.0.0.1" i ``server`` feltet og deretter "3000" i ``port`` feltet.
         3. Trykk Apply Changes
-        4. Trykk på Switchy Omega Ikonen som ligger i chrome og velg den nye profiler. Dette må gjøres hver gang chrome startes.
+        4. Trykk på Switchy Omega Ikonet som ligger i chrome og velg den nye profiler. Dette må gjøres hver gang chrome startes.
 
         ![Instalasjonsbilde som viser hvor man skal see når SwitchyOmega blir konfigurert](http://65.108.213.178:3000/api/image?imageID=speoUP2zoGfVNLWockTj)
 
-## Kjøring av tester
+<br/><br/>
+
+## **Kjøring av tester**
+---
 - Directory Server:
     ```bash
         cd DirectoryServer
         npm run test        
     ```
 
-## Ekstern informasjon
+<br/><br/>
+
+## **Ekstern informasjon**
+---
 Ekstern informasjon brukt i dette prosjekter er som føgler:
 - C# Dotnet dokumentasjon 
     - https://docs.microsoft.com/en-us/dotnet

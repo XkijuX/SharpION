@@ -35,7 +35,7 @@ namespace ClientOnionRouting
             tcpListener.Start();
 
             // Start waiting for connections
-            while(true)
+            while (true)
             {
                 Console.WriteLine("Waiting for a connection... ");
                 TcpClient client = tcpListener.AcceptTcpClient();
@@ -49,8 +49,8 @@ namespace ClientOnionRouting
                 String response = apiTask.Result;
                 JArray nodesList = JArray.Parse(response);
                 TunnelNode[] nodes = new TunnelNode[nodesList.Count];
-                for(int i = 0; nodesList.Count > i; i++) nodes[i] = nodesList[i].ToObject<TunnelNode>();
-               
+                for (int i = 0; nodesList.Count > i; i++) nodes[i] = nodesList[i].ToObject<TunnelNode>();
+
 
                 // Start a new thread that runs the program
                 ConnectionHandler connectionHandler = new ConnectionHandler(client, nodes);
@@ -80,12 +80,12 @@ namespace ClientOnionRouting
             String firstNode = nodes[0].Address;
             String[] addresstAndPort = firstNode.Split(":");
             TcpClient nextNode = new TcpClient(addresstAndPort[0], int.Parse(addresstAndPort[1])); // Fix the parse stuff
-            
+
             NetworkStream nextNetworkStream = nextNode.GetStream();
             NetworkStream fromNetworkStream = fromClient.GetStream();
 
             // Establish tunnel
-            for(int i = 0; nodes.Length > i; i++)
+            for (int i = 0; nodes.Length > i; i++)
             {
                 TunnelNode node = nodes[i];
                 // Create RSA provider and set public key
@@ -107,14 +107,14 @@ namespace ClientOnionRouting
                 // Add 2# and pubkey
                 byte[] keyAndEncrypt = ConcatArray(Encoding.UTF8.GetBytes("2#" + encrypted.Length + ":" + clientPublicKey.Length + "#"), encrypted);
                 byte[] message = ConcatArray(keyAndEncrypt, clientPublicKey);
-                
-                for(int j = 0; i > j; j++)
+
+                for (int j = 0; i > j; j++)
                 {
                     //Encrypt Data
-                    byte[] encryptedDataLayer = EncryptData(message, nodes[i - j - 1].AesKey);
-                    message = ConcatArray(Encoding.UTF8.GetBytes("1#" + nodes[i - j ].Address + "\r\n"), encryptedDataLayer);
+                    message = ConcatArray(Encoding.UTF8.GetBytes("1#" + nodes[i - j].Address + "\r\n"), message);
+                    message = EncryptData(message, nodes[i - j - 1].AesKey);
                 }
-                
+
                 // Send to next node
                 nextNetworkStream.Write(message, 0, message.Length);
                 nextNetworkStream.Flush();
@@ -123,16 +123,18 @@ namespace ClientOnionRouting
                 // Wait and read response to byte array
                 Console.WriteLine("Thread: " + Thread.GetCurrentProcessorId() + " Waiting on key response.");
                 int resSize = nextNetworkStream.Read(encryptedResponse, 0, encryptedResponse.Length);
-                encryptedResponse = new ArraySegment<byte>(encryptedResponse,  0,resSize).ToArray();
+                encryptedResponse = new ArraySegment<byte>(encryptedResponse, 0, resSize).ToArray();
 
                 // Decrypt layers
                 for (int j = 0; (i - 1) >= j; j++)
                 {
-                    encryptedResponse = DecryptData(encryptedResponse, nodes[j].AesKey);
+                    byte[] iv = new ArraySegment<byte>(encryptedResponse, 0, 16).ToArray();
+                    encryptedResponse = new ArraySegment<byte>(encryptedResponse, iv.Length, encryptedResponse.Length - iv.Length).ToArray();
+                    encryptedResponse = DecryptData(encryptedResponse, nodes[j].AesKey, iv);
                 }
-                
+
                 // Decrypt the second part of the key
-                byte[] secondHalf = clientRSA.Decrypt(new ArraySegment<byte>(encryptedResponse, 0, resSize).ToArray(), false);
+                byte[] secondHalf = clientRSA.Decrypt(new ArraySegment<byte>(encryptedResponse, 0, encryptedResponse.Length).ToArray(), false);
 
                 // Save key to node class
                 node.AesKey = ConcatArray(firstHalf, secondHalf);
@@ -140,33 +142,33 @@ namespace ClientOnionRouting
             }
 
             // Listen data sent in the tunnel
-            while(nextNode.Connected)
+            while (nextNode.Connected)
             {
                 // Listen to data sent from proxy connection
-                if(fromNetworkStream.DataAvailable)
+                if (fromNetworkStream.DataAvailable)
                 {
                     String res = ReadDataString(fromNetworkStream);
-                    
+
                     // Create HttpConnection class
                     HttpConnection httpConnection = HttpConnection.Parse(res);
 
                     // Deny Connect Requests (not supported)
                     if (httpConnection.method.Equals("Connect")) return;
-                    
+
                     // Get Http Request Header
                     byte[] httpHeader = Encoding.UTF8.GetBytes(httpConnection.getFullHeader());
 
                     // Encrypt data
-                    byte[] encryptedData = EncryptData(httpHeader, nodes[nodes.Length - 1].AesKey);
-                    byte[] layer = ConcatArray(Encoding.UTF8.GetBytes("0#" + httpConnection.url.Host + ":" + httpConnection.url.Port + "<!!>DNS:<!!>\r\n"), encryptedData);
-                    
+                    byte[] layer = ConcatArray(Encoding.UTF8.GetBytes("0#" + httpConnection.url.Host + ":" + httpConnection.url.Port + "<!!>DNS:<!!>\r\n"), httpHeader);
+                    layer = EncryptData(layer, nodes[nodes.Length - 1].AesKey);
+
                     // Create layers
-                    for(int i = 1; nodes.Length > i; i++)
+                    for (int i = 1; nodes.Length > i; i++)
                     {
                         TunnelNode node = nodes[nodes.Length - i - 1];
-                        byte[] encryptedLayer = EncryptData(layer, node.AesKey);
                         String[] hostPort = node.Address.Split(":");
-                        layer = ConcatArray(Encoding.UTF8.GetBytes("1#" + hostPort[0] + ":" + hostPort[1] + "\r\n"), encryptedLayer);
+                        layer = ConcatArray(Encoding.UTF8.GetBytes("1#" + hostPort[0] + ":" + hostPort[1] + "\r\n"), layer);
+                        layer = EncryptData(layer, node.AesKey);
                     }
 
                     // Send data through tunnel
@@ -180,17 +182,16 @@ namespace ClientOnionRouting
                     byte[] buffer = new byte[8192];
                     int bytesRead;
                     int k = 0;
-                    
+
                     // Read the data from the tunnel
                     MemoryStream ms = new MemoryStream();
 
-                    // Read data
-                    lp:
+                // Read data
+                lp:
                     while (nextNetworkStream.DataAvailable && (bytesRead = nextNetworkStream.Read(buffer, 0, buffer.Length)) > 0)
                     {
                         k += bytesRead;
                         ms.Write(new ArraySegment<byte>(buffer, 0, bytesRead).ToArray());
-                      
                     }
 
                     // Wait and check if there is more data
@@ -201,9 +202,11 @@ namespace ClientOnionRouting
                     byte[] res = ms.ToArray();
                     for (int i = 0; nodes.Length > i; i++)
                     {
-                        res = DecryptData(res, nodes[i].AesKey);
+                        byte[] iv = new ArraySegment<byte>(res, 0, 16).ToArray();
+                        res = new ArraySegment<byte>(res, iv.Length, res.Length - iv.Length).ToArray();
+                        res = DecryptData(res, nodes[i].AesKey, iv);
                     }
-                    
+
                     // Send data through the proxy
                     fromNetworkStream.Write(res, 0, res.Length);
                     fromNetworkStream.Flush();
@@ -225,8 +228,20 @@ namespace ClientOnionRouting
             aes.Mode = CipherMode.CFB;
             aes.Padding = PaddingMode.Zeros;
             aes.Key = key;
-            aes.IV = new byte[] { 0xE0, 0x4F, 0xD0, 0x20, 0xEA, 0x3A, 0x69, 0x10, 0xA2, 0xD8, 0x8, 0x0, 0x2B, 0x30, 0x30, 0x9D };
+            aes.GenerateIV();
+            
+            return aes;
+        }
 
+        /// <summary>
+        /// Creates a AesManaged with IV
+        /// </summary>
+        /// <param name="key">AES key</param>
+        /// <returns>AesManaged object</returns>
+        private AesManaged CreateAas(byte[] key, byte[] iv)
+        {
+            AesManaged aes = CreateAas(key);
+            aes.IV = iv;
             return aes;
         }
 
@@ -236,10 +251,10 @@ namespace ClientOnionRouting
         /// <param name="bytes">Data to decrypt</param>
         /// <param name="key">AES key</param>
         /// <returns>Decrypted data</returns>
-        private byte[] DecryptData(byte[] bytes, byte[] key)
+        private byte[] DecryptData(byte[] bytes, byte[] key, byte[] iv)
         {
-            AesManaged aes = CreateAas(key);
-            
+            AesManaged aes = CreateAas(key, iv);
+
             byte[] result;
             using MemoryStream resMs = new MemoryStream();
 
@@ -272,7 +287,8 @@ namespace ClientOnionRouting
                 cryptoStream.FlushFinalBlock();
                 encrypted = ms.ToArray();
             }
-            return encrypted;
+
+            return ConcatArray(aes.IV, encrypted);
         }
 
         /// <summary>
@@ -365,7 +381,7 @@ namespace ClientOnionRouting
             connection.headerMap = new Dictionary<String, String>();
 
             // Loop through all the lines and skip the first line
-            for(int i = 1; headerLines.Length - 2 > i; i++)
+            for (int i = 1; headerLines.Length - 2 > i; i++)
             {
                 String[] keyValue = headerLines[i].Split(":");
                 connection.headerMap.Add(keyValue[0], keyValue[1]);
