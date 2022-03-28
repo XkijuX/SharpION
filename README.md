@@ -1,7 +1,7 @@
 # SharpION
 
 ![SharpionLogo](http://65.108.213.178:3000/api/image?imageID=Njf1nF2r9VnrQWuRb8c3)
-SharpION er et Onion Nettverk implementert i C#. SharpION fungerer som en tunnel mellom en Client og Serveren. Dette gjøres ved at brukeren kobler seg på SharpION nettverket. Client  en inngang til SharpION nettverket og fungerer som en proxy. Denne proxyen kan brukes med nettlesere som blant annet [Google Chrome](https://www.google.com/chrome/) ved bruk av utvidelser. 
+SharpION er et Onion Nettverk implementert i C#. SharpION fungerer som en tunnel mellom en klient og flere servere. Dette gjøres ved at brukeren kobler seg på SharpION nettverket. Brukeren bruker programmet Client som er en inngang til SharpION nettverket og fungerer som en proxy. Denne proxyen kan brukes med nettlesere som blant annet [Google Chrome](https://www.google.com/chrome/) ved bruk av utvidelser. 
 
 Når proxy serveren får et request vil en ny rute igjennom SharpION nettverket opprettes. Det velges tre noder fra nettverket. Deretter skapes sikre veier mellom disse nodene ved hjelp av kryptering. 
 
@@ -35,7 +35,7 @@ Når proxy serveren får et request vil en ny rute igjennom SharpION nettverket 
 SharpION er et program som ikke er ferdig utviklet. Programmet har fortsatt mangler og svakheter. Disse er som følger:
 - 100% Test dekning (``mangler / fremtidig arbeid``)
     - Viktig for å sikre at programmet og funksjoner fungerer.
-- Garlic Routing (``svakhet``)
+- Onion Routing timing analyser (``svakhet``)
     - Selv om onion routing fungerer bra for å skjule data er det ikke perfekt. Ved hjelp av timing analyser er det mulig å finne avsender og destinasjon. En måte å løse dette på er å bruke Garlic Routing.
 - HTTPS (``mangel / fremtidig arbeid``)
     - SharpION støtter bare HTTP nå som ikke er sikkert på endenoden. Dersom en ondsinnet person kjører en node som blir endenoden kan denne personen fange trafikken som går igjennom nettverket.
