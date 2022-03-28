@@ -20,7 +20,7 @@ Når proxy serveren får et request vil en ny rute igjennom SharpION nettverket 
 ## **Funksjonalitet**
 ---
 - Sending av HTTP request
-    - Støtter http metoder som GET, PUT, POST, DELETE
+    - Støtter http metoder som GET, PUT, POST, DELETE. (CONNECT er ikke støttet)
 - Støtte for visuell fremvisning
     - Kan brukes igjennom chrome og andre nettlesere som støtter proxy for HTTP koblinger.
 - Kryptografi
@@ -92,6 +92,7 @@ For å installere dependencies på Directory Server:
 
 ## **Bruker Manual**
 ---
+
 Programmet startes i denne rekkefølgen:
 1. Directory Server
      ```bash
@@ -134,7 +135,12 @@ Programmet startes i denne rekkefølgen:
         cd DirectoryServer
         npm run test        
     ```
-
+- Gode nettsider for å teste at programmet fungerer i nettleseren:
+    - http://eu.httpbin.org/
+        - Store meldinger (1.4 mb jquery fil) 
+        - Kan brukes for å teste mange http metoder.
+    - http://datakom.no/
+        - Simpel http nettside
 <br/><br/>
 
 ## **Ekstern informasjon**
