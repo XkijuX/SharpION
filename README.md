@@ -13,6 +13,7 @@ Når proxy serveren får et request vil en ny rute igjennom SharpION nettverket 
 1. [Intallasjonsinstrukser](#intallasjonsinstrukser)
 1. [Bruker Manual](#bruker-manual)
 1. [Running Tests](#kjøring-av-tester)
+1. [Kryptografi](#kryptografi)
 1. [Ekstern infomasjon](#ekstern-informasjon)
 
 
@@ -25,6 +26,7 @@ Når proxy serveren får et request vil en ny rute igjennom SharpION nettverket 
     - Kan brukes igjennom chrome og andre nettlesere som støtter proxy for HTTP koblinger.
 - Kryptografi
     - Bruker RSA og AES-CFB for å skjule meldingene i nettverket.
+    - [For mer info om kryptografi](#kryptografi)
 - DNS lookup
     - Henter ip adresser fra DNS servere fra HTTP header. Dette gjøres ved endenoden og sikkrer anonymitet hos bruker.
 
@@ -141,6 +143,21 @@ Programmet startes i denne rekkefølgen:
         - Kan brukes for å teste mange http metoder.
     - http://datakom.no/
         - Simpel http nettside
+
+<br/><br/>
+
+## **Kryptografi**
+
+SharpION nettverket fungerer ved at en bruker gjør et request til Client programmet. Client programmet vil så opprette en tunnel mellom tre noder. Tunnelen blir oppretter ved at Client og hver enkelt node lager en sesjonsnøkkel. Denne prosessen er som følger.- 
+1. Client krypterer sin del av sesjonsnøkkelen ved hjelp av Noden sin offentlige nøkkel. 
+1. Noden tar imot dataen og lager den andre delen av nøkkelen. Denne blir kryptert ved hjelp av RSA og Client sin offentlige nøkkel. Deretter blir den sendt tilbake til Client programmet.
+1. Noden og Client har nå opprettet en sesjonsnøkkel og prosessen gjennomføres med alle noder i tunnelen. Der en sesjonsnøkkel har blitt opprettet brukes AES kryptering. Dette gjøres av klienten. Klienten krypterer (nodeNr - 1) ganger. Når en node får tilsendt data og dette ikke er en "key exchange" (RSA krypter). Vil den dekryptere sitt skall og sende daten videre.
+
+Når tunnelen er opprettet vil dataen fra brukeren sendes igjennom tunnelen. Dette gjøres ved at klienten krypterer en gang per node i tunnelen ved hjelp av sesjonsnøkkelen generert tidligere. Deretter blir dataen send videre og hver node dekrypterer sitt skall. Dette gjøres til dataen har nådd målet. Når data sendes tilbake blir daten kryptert på hver node. Deretter dekrypterer Client programmet en gang for hver node ved hjelp av sesjonsnøkkelene. Når dette er gjort sendes den ukrypterte daten til brukeren.
+
+Bildet under viser denne flyten beskrevet over:
+![Bilde som viser kryptografi flyt](http://65.108.213.178:3000/api/image?imageID=eZUJgkH4xIGKwP7zV1Li)
+
 <br/><br/>
 
 ## **Ekstern informasjon**
